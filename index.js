@@ -22,13 +22,14 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
     Person.find({}).then(persons => {
         response.json(persons)
     })
+        .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, mext) => {
     const body = request.body
 
     if (body.name === undefined) {
@@ -43,9 +44,10 @@ app.post('/api/persons', (request, response) => {
     person.save().then(savedPerson => {
         response.json(savedPerson)
     })
+        .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id)
         .then(person => {
             if (person) {
@@ -72,10 +74,10 @@ app.put('/api/persons/:id', (request, response, next) => {
         name: body.name,
         number: body.number,
     }
-
+    console.log(person)
     Person.findByIdAndUpdate(request.params.id, person, { new: true })
         .then(updatedPerson => {
-            response.json(updatePerson)
+            response.json(updatedPerson)
         })
         .catch(error => next(error))
 })
@@ -86,8 +88,11 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.status === 400) {
+        return response.status(400).send({ error: error.message })
     }
-    next(error)
+
+    return response.status(500).send({ error: 'Internal Server Error' })
 }
 
 app.use(errorHandler)
