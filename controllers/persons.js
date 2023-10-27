@@ -1,5 +1,5 @@
 const personRouter = require('express').Router()
-const Person = require('./models/person')
+const Person = require('../models/person')
 
 
 personRouter.get('/', (request, response, next) => {
